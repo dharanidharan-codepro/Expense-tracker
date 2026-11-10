@@ -1,0 +1,265 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Dashboard — Smart Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="dashboard-page">
+  <div class="container-fluid px-4 py-4">
+
+    <!-- ── Welcome Header ── -->
+    <div class="dashboard-header mb-4 animate-fade-in">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+        <div>
+          <h1 class="page-title mb-1">
+            Welcome back, <span class="text-accent">{{ user.username }}</span> 👋
+          </h1>
+          <p class="text-muted mb-0">
+            <i class="bi bi-calendar3 me-1"></i>
+            Track your spending and understand your financial habits.
+          </p>
+        </div>
+        <a href="{% url 'add_expense' %}" class="btn btn-primary btn-lg px-4 add-expense-hero-btn">
+          <i class="bi bi-plus-circle me-2"></i>Add Expense
+        </a>
+      </div>
+    </div>
+
+    <!-- ── Summary Cards ── -->
+    <div class="row g-3 mb-4">
+      <!-- Total -->
+      <div class="col-6 col-lg-3 animate-fade-in animate-delay-1">
+        <div class="summary-card summary-card-total">
+          <div class="summary-card-icon">
+            <i class="bi bi-wallet2"></i>
+          </div>
+          <div class="summary-card-content">
+            <div class="summary-label">Total Expenses</div>
+            <div class="summary-value">₹{{ total_all|floatformat:2 }}</div>
+            <div class="summary-sub">{{ expense_count }} record{{ expense_count|pluralize }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Today -->
+      <div class="col-6 col-lg-3 animate-fade-in animate-delay-2">
+        <div class="summary-card summary-card-today">
+          <div class="summary-card-icon">
+            <i class="bi bi-sun"></i>
+          </div>
+          <div class="summary-card-content">
+            <div class="summary-label">Today</div>
+            <div class="summary-value">₹{{ total_today|floatformat:2 }}</div>
+            <div class="summary-sub">Spent today</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- This Week -->
+      <div class="col-6 col-lg-3 animate-fade-in animate-delay-3">
+        <div class="summary-card summary-card-week">
+          <div class="summary-card-icon">
+            <i class="bi bi-calendar-week"></i>
+          </div>
+          <div class="summary-card-content">
+            <div class="summary-label">This Week</div>
+            <div class="summary-value">₹{{ total_week|floatformat:2 }}</div>
+            <div class="summary-sub">Mon — Today</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- This Month -->
+      <div class="col-6 col-lg-3 animate-fade-in animate-delay-4">
+        <div class="summary-card summary-card-month">
+          <div class="summary-card-icon">
+            <i class="bi bi-calendar-month"></i>
+          </div>
+          <div class="summary-card-content">
+            <div class="summary-label">This Month</div>
+            <div class="summary-value">₹{{ total_month|floatformat:2 }}</div>
+            <div class="summary-sub">This month's total</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Recent Expenses + Quick Actions ── -->
+    <div class="row g-4 mb-4">
+
+      <!-- Recent Expenses -->
+      <div class="col-lg-8 animate-fade-in animate-delay-2">
+        <div class="dashboard-card h-100">
+          <div class="dashboard-card-header">
+            <h2 class="card-section-title">
+              <i class="bi bi-clock-history me-2 text-primary"></i>Recent Expenses
+            </h2>
+            <a href="{% url 'expense_list' %}" class="btn btn-sm btn-outline-primary">
+              View All <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+          </div>
+          <div class="dashboard-card-body p-0">
+            {% if recent_expenses %}
+              <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="recentExpensesTable">
+                  <thead class="table-head">
+                    <tr>
+                      <th>Date</th>
+                      <th>Description</th>
+                      <th>Category</th>
+                      <th class="text-end">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for expense in recent_expenses %}
+                    <tr>
+                      <td class="text-muted small">{{ expense.date|date:"d M Y" }}</td>
+                      <td>
+                        <div class="fw-semibold">{{ expense.description|truncatechars:30 }}</div>
+                        {% if expense.notes %}
+                          <small class="text-muted">{{ expense.notes|truncatechars:40 }}</small>
+                        {% endif %}
+                      </td>
+                      <td>
+                        <span class="category-badge category-{{ expense.category|lower }}">
+                          {{ expense.category }}
+                        </span>
+                      </td>
+                      <td class="text-end fw-bold text-danger">₹{{ expense.amount|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% else %}
+              <div class="empty-state py-5">
+                <i class="bi bi-receipt-cutoff empty-icon"></i>
+                <h3 class="empty-title">No Expenses Yet</h3>
+                <p class="text-muted">Start by adding your first expense!</p>
+                <a href="{% url 'add_expense' %}" class="btn btn-primary mt-2">
+                  <i class="bi bi-plus-circle me-2"></i>Add First Expense
+                </a>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="col-lg-4 animate-fade-in animate-delay-3">
+        <div class="dashboard-card h-100">
+          <div class="dashboard-card-header">
+            <h2 class="card-section-title">
+              <i class="bi bi-lightning-charge me-2 text-warning"></i>Quick Actions
+            </h2>
+          </div>
+          <div class="dashboard-card-body">
+            <div class="quick-actions d-flex flex-column gap-3">
+              <a href="{% url 'add_expense' %}" class="quick-action-btn btn btn-primary">
+                <i class="bi bi-plus-circle"></i>
+                <div>
+                  <div class="fw-semibold">Add Expense</div>
+                  <small>Record a new expense</small>
+                </div>
+              </a>
+              <a href="{% url 'expense_list' %}" class="quick-action-btn btn btn-outline-secondary">
+                <i class="bi bi-list-ul"></i>
+                <div>
+                  <div class="fw-semibold">View Expenses</div>
+                  <small>Browse all records</small>
+                </div>
+              </a>
+              <a href="{% url 'report_page' %}" class="quick-action-btn btn btn-outline-info">
+                <i class="bi bi-file-earmark-bar-graph"></i>
+                <div>
+                  <div class="fw-semibold">Reports</div>
+                  <small>Download CSV or PDF</small>
+                </div>
+              </a>
+              <a href="{% url 'expense_list' %}?filter=this_month" class="quick-action-btn btn btn-outline-success">
+                <i class="bi bi-calendar-check"></i>
+                <div>
+                  <div class="fw-semibold">This Month</div>
+                  <small>Filter monthly expenses</small>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── Analytics Charts ── -->
+    <div class="row g-4 mb-4">
+
+      <!-- Doughnut Chart — Category-wise -->
+      <div class="col-lg-5 animate-fade-in animate-delay-3">
+        <div class="dashboard-card h-100">
+          <div class="dashboard-card-header">
+            <h2 class="card-section-title">
+              <i class="bi bi-pie-chart me-2 text-primary"></i>Spending by Category
+            </h2>
+          </div>
+          <div class="dashboard-card-body d-flex align-items-center justify-content-center">
+            {% if chart_values %}
+              <div class="chart-container-sm">
+                <canvas id="categoryChart" aria-label="Category-wise expense chart"></canvas>
+              </div>
+            {% else %}
+              <div class="empty-state py-4">
+                <i class="bi bi-pie-chart empty-icon"></i>
+                <p class="text-muted mb-0">No data to display yet.<br>Add expenses to see analytics.</p>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Bar/Line Chart — Expense Trend -->
+      <div class="col-lg-7 animate-fade-in animate-delay-4">
+        <div class="dashboard-card h-100">
+          <div class="dashboard-card-header">
+            <h2 class="card-section-title">
+              <i class="bi bi-graph-up me-2 text-success"></i>Expense Trend (Last 30 Days)
+            </h2>
+          </div>
+          <div class="dashboard-card-body">
+            {% if trend_values %}
+              <div class="chart-container-lg">
+                <canvas id="trendChart" aria-label="Expense trend chart"></canvas>
+              </div>
+            {% else %}
+              <div class="empty-state py-4">
+                <i class="bi bi-graph-up empty-icon"></i>
+                <p class="text-muted mb-0">No data to display yet.<br>Add expenses to see your trend.</p>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/charts.js' %}"></script>
+<script>
+  // Pass Django data to JavaScript
+  const CHART_LABELS = {{ chart_labels|safe }};
+  const CHART_VALUES = {{ chart_values|safe }};
+  const TREND_LABELS = {{ trend_labels|safe }};
+  const TREND_VALUES = {{ trend_values|safe }};
+
+  document.addEventListener('DOMContentLoaded', function() {
+    if (CHART_VALUES.length > 0) {
+      initCategoryChart('categoryChart', CHART_LABELS, CHART_VALUES);
+    }
+    if (TREND_VALUES.length > 0) {
+      initTrendChart('trendChart', TREND_LABELS, TREND_VALUES);
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% block title %}{% if action == 'Add' %}Add Expense{% else %}Edit Expense{% endif %} — Smart Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-7">
+
+      <!-- Breadcrumb -->
+      <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+          <li class="breadcrumb-item"><a href="{% url 'expense_list' %}">Expenses</a></li>
+          <li class="breadcrumb-item active">{{ action }} Expense</li>
+        </ol>
+      </nav>
+
+      <!-- Form Card -->
+      <div class="dashboard-card animate-fade-in">
+        <div class="dashboard-card-header">
+          <h1 class="card-section-title mb-0">
+            {% if action == 'Add' %}
+              <i class="bi bi-plus-circle me-2 text-primary"></i>Add New Expense
+            {% else %}
+              <i class="bi bi-pencil me-2 text-warning"></i>Edit Expense
+            {% endif %}
+          </h1>
+          {% if action == 'Add' %}
+            <p class="text-muted small mb-0 mt-1">
+              <i class="bi bi-magic me-1 text-primary"></i>
+              Category will be auto-predicted from your description!
+            </p>
+          {% endif %}
+        </div>
+
+        <div class="dashboard-card-body">
+          <form method="post" id="expenseForm" novalidate>
+            {% csrf_token %}
+
+            <!-- Description with auto-predict badge -->
+            <div class="mb-3">
+              <label for="{{ form.description.id_for_label }}" class="form-label fw-semibold">
+                <i class="bi bi-pencil-square me-1"></i>Description <span class="text-danger">*</span>
+              </label>
+              {{ form.description }}
+              {% if form.description.errors %}
+                <div class="invalid-feedback d-block">{{ form.description.errors.0 }}</div>
+              {% endif %}
+              <div class="form-text d-flex align-items-center gap-1 mt-1">
+                <i class="bi bi-lightbulb text-warning"></i>
+                Tip: Type keywords like "pizza", "uber", "netflix" to auto-predict the category.
+              </div>
+            </div>
+
+            <!-- Amount -->
+            <div class="mb-3">
+              <label for="{{ form.amount.id_for_label }}" class="form-label fw-semibold">
+                <i class="bi bi-currency-rupee me-1"></i>Amount <span class="text-danger">*</span>
+              </label>
+              <div class="input-group">
+                <span class="input-group-text fw-bold">₹</span>
+                {{ form.amount }}
+              </div>
+              {% if form.amount.errors %}
+                <div class="invalid-feedback d-block">{{ form.amount.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Date -->
+            <div class="mb-3">
+              <label for="{{ form.date.id_for_label }}" class="form-label fw-semibold">
+                <i class="bi bi-calendar3 me-1"></i>Date <span class="text-danger">*</span>
+              </label>
+              {{ form.date }}
+              {% if form.date.errors %}
+                <div class="invalid-feedback d-block">{{ form.date.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Category (auto-predicted) -->
+            <div class="mb-3">
+              <label for="{{ form.category.id_for_label }}" class="form-label fw-semibold">
+                <i class="bi bi-tag me-1"></i>Category
+                <span class="badge bg-primary ms-2" id="predictedBadge" style="display:none;">
+                  <i class="bi bi-magic me-1"></i>Auto-predicted
+                </span>
+              </label>
+              {{ form.category }}
+              {% if form.category.errors %}
+                <div class="invalid-feedback d-block">{{ form.category.errors.0 }}</div>
+              {% endif %}
+              <div class="form-text">Auto-filled as you type. You can change it manually.</div>
+            </div>
+
+            <!-- Notes -->
+            <div class="mb-4">
+              <label for="{{ form.notes.id_for_label }}" class="form-label fw-semibold">
+                <i class="bi bi-sticky me-1"></i>Notes
+                <span class="text-muted fw-normal">(optional)</span>
+              </label>
+              {{ form.notes }}
+              {% if form.notes.errors %}
+                <div class="invalid-feedback d-block">{{ form.notes.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex gap-3">
+              <button type="submit" class="btn btn-primary btn-lg flex-fill" id="submitBtn">
+                {% if action == 'Add' %}
+                  <i class="bi bi-plus-circle me-2"></i>Add Expense
+                {% else %}
+                  <i class="bi bi-check-circle me-2"></i>Update Expense
+                {% endif %}
+              </button>
+              <a href="{% url 'expense_list' %}" class="btn btn-outline-secondary btn-lg px-4">
+                <i class="bi bi-x-circle me-2"></i>Cancel
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-predict category from description via AJAX
+const descriptionInput = document.getElementById('id_description');
+const categorySelect = document.getElementById('id_category');
+const predictedBadge = document.getElementById('predictedBadge');
+
+let predictionTimer = null;
+
+if (descriptionInput && categorySelect) {
+  descriptionInput.addEventListener('input', function() {
+    clearTimeout(predictionTimer);
+    const description = this.value.trim();
+
+    if (description.length > 2) {
+      predictionTimer = setTimeout(function() {
+        fetch(`/api/predict-category/?description=${encodeURIComponent(description)}`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.category) {
+              // Update the category dropdown
+              for (let option of categorySelect.options) {
+                if (option.value === data.category) {
+                  option.selected = true;
+                  break;
+                }
+              }
+              // Show the "Auto-predicted" badge
+              predictedBadge.style.display = 'inline-block';
+            }
+          })
+          .catch(err => console.log('Prediction error:', err));
+      }, 400); // Wait 400ms after user stops typing
+    }
+  });
+
+  // Hide auto-predicted badge when user manually selects a category
+  categorySelect.addEventListener('change', function() {
+    predictedBadge.style.display = 'none';
+  });
+}
+</script>
+{% endblock %}

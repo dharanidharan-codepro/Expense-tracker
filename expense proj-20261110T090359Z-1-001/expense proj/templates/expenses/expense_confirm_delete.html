@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block title %}Delete Expense — Smart Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-5">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-6 col-lg-5">
+
+      <!-- Breadcrumb -->
+      <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+          <li class="breadcrumb-item"><a href="{% url 'expense_list' %}">Expenses</a></li>
+          <li class="breadcrumb-item active">Delete</li>
+        </ol>
+      </nav>
+
+      <!-- Delete Confirmation Card -->
+      <div class="dashboard-card delete-confirm-card">
+        <div class="delete-icon-container text-center py-4">
+          <div class="delete-icon-circle">
+            <i class="bi bi-trash3"></i>
+          </div>
+        </div>
+
+        <div class="dashboard-card-body text-center">
+          <h1 class="h4 fw-bold text-danger mb-2">Delete Expense?</h1>
+          <p class="text-muted mb-4">
+            Are you sure you want to permanently delete this expense? This action cannot be undone.
+          </p>
+
+          <!-- Expense Details Box -->
+          <div class="delete-detail-box mb-4">
+            <div class="delete-detail-row">
+              <span class="detail-label"><i class="bi bi-pencil me-2"></i>Description</span>
+              <span class="detail-value fw-semibold">{{ expense.description }}</span>
+            </div>
+            <div class="delete-detail-row">
+              <span class="detail-label"><i class="bi bi-currency-rupee me-2"></i>Amount</span>
+              <span class="detail-value fw-bold text-danger">₹{{ expense.amount|floatformat:2 }}</span>
+            </div>
+            <div class="delete-detail-row">
+              <span class="detail-label"><i class="bi bi-tag me-2"></i>Category</span>
+              <span class="category-badge category-{{ expense.category|lower }}">{{ expense.category }}</span>
+            </div>
+            <div class="delete-detail-row">
+              <span class="detail-label"><i class="bi bi-calendar3 me-2"></i>Date</span>
+              <span class="detail-value">{{ expense.date|date:"d M Y" }}</span>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="d-flex gap-3">
+            <!-- Cancel -->
+            <a href="{% url 'expense_list' %}" class="btn btn-outline-secondary btn-lg flex-fill" id="cancelDeleteBtn">
+              <i class="bi bi-x-circle me-2"></i>Cancel
+            </a>
+
+            <!-- Confirm Delete — POST request -->
+            <form method="post" class="flex-fill" id="deleteForm">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-danger btn-lg w-100" id="confirmDeleteBtn">
+                <i class="bi bi-trash me-2"></i>Yes, Delete
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

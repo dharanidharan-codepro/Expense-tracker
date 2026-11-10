@@ -1,0 +1,13 @@
+# Smart Expense Tracker — Python Dependencies
+# Install with: pip install -r requirements.txt
+
+# Core Django web framework
+Django==6.1.1
+
+# PDF report generation
+reportlab==5.0.1
+
+# Image support (used by reportlab)
+Pillow==12.2.0
+
+# Note: Chart.js is loaded from CDN in base.html (no pip install needed)

@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% block title %}Reports — Smart Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+
+  <!-- ── Page Header ── -->
+  <div class="mb-4 animate-fade-in">
+    <h1 class="page-title mb-1">
+      <i class="bi bi-file-earmark-bar-graph me-2 text-primary"></i>Expense Reports
+    </h1>
+    <p class="text-muted mb-0">Download your expense records as CSV or PDF for offline review.</p>
+  </div>
+
+  <!-- ── Summary Banner ── -->
+  <div class="report-banner mb-4 animate-fade-in animate-delay-1">
+    <div class="row align-items-center g-3">
+      <div class="col-md-4 text-center">
+        <div class="report-stat">
+          <div class="report-stat-value">{{ expense_count }}</div>
+          <div class="report-stat-label">Total Records</div>
+        </div>
+      </div>
+      <div class="col-md-4 text-center">
+        <div class="report-stat">
+          <div class="report-stat-value text-danger">₹{{ total|floatformat:2 }}</div>
+          <div class="report-stat-label">Total Amount</div>
+        </div>
+      </div>
+      <div class="col-md-4 text-center">
+        <div class="report-stat">
+          <div class="report-stat-value text-primary">{{ user.username }}</div>
+          <div class="report-stat-label">Account</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Download Cards ── -->
+  <div class="row g-4 mb-4">
+
+    <!-- CSV Card -->
+    <div class="col-md-6 animate-fade-in animate-delay-2">
+      <div class="dashboard-card download-card h-100">
+        <div class="dashboard-card-body text-center py-5">
+          <div class="download-icon download-icon-csv mb-3">
+            <i class="bi bi-filetype-csv"></i>
+          </div>
+          <h2 class="h4 fw-bold mb-2">Download CSV</h2>
+          <p class="text-muted mb-4">
+            Export all your expenses as a spreadsheet-compatible CSV file.
+            Open in Excel, Google Sheets, or any spreadsheet app.
+          </p>
+          <div class="report-features mb-4">
+            <div class="feature-item"><i class="bi bi-check-circle-fill text-success me-2"></i>Date, Description, Category</div>
+            <div class="feature-item"><i class="bi bi-check-circle-fill text-success me-2"></i>Amount &amp; Notes</div>
+            <div class="feature-item"><i class="bi bi-check-circle-fill text-success me-2"></i>Total row at bottom</div>
+            <div class="feature-item"><i class="bi bi-check-circle-fill text-success me-2"></i>{{ expense_count }} records included</div>
+          </div>
+          <a href="{% url 'download_csv' %}" class="btn btn-success btn-lg px-5" id="downloadCsvBtn">
+            <i class="bi bi-download me-2"></i>Download CSV
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- PDF Card -->
+    <div class="col-md-6 animate-fade-in animate-delay-3">
+      <div class="dashboard-card download-card h-100">
+        <div class="dashboard-card-body text-center py-5">
+          <div class="download-icon download-icon-pdf mb-3">
+            <i class="bi bi-filetype-pdf"></i>
+          </div>
+          <h2 class="h4 fw-bold mb-2">Download PDF</h2>
+          <p class="text-muted mb-4">
+            Generate a professionally formatted PDF report suitable for
+            printing, sharing, or archiving your expense history.
+          </p>
+          <div class="report-features mb-4">
+            <div class="feature-item"><i class="bi bi-check-circle-fill text-success me-2"></i>Professional layout</div>
+            <div class="feature-item"><i class="bi bi-check-circle-fill text-success me-2"></i>Username &amp; report date</div>
+            <div class="feature-item"><i class="bi bi-check-circle-fill text-success me-2"></i>Formatted expense table</div>
+            <div class="feature-item"><i class="bi bi-check-circle-fill text-success me-2"></i>Total expenses summary</div>
+          </div>
+          <a href="{% url 'download_pdf' %}" class="btn btn-danger btn-lg px-5" id="downloadPdfBtn">
+            <i class="bi bi-download me-2"></i>Download PDF
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Preview Table ── -->
+  {% if expenses %}
+  <div class="dashboard-card">
+    <div class="dashboard-card-header">
+      <h2 class="card-section-title">
+        <i class="bi bi-table me-2"></i>Preview (Recent 10 Records)
+      </h2>
+      <a href="{% url 'expense_list' %}" class="btn btn-sm btn-outline-primary">
+        View All <i class="bi bi-arrow-right ms-1"></i>
+      </a>
+    </div>
+    <div class="dashboard-card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" id="reportPreviewTable">
+          <thead class="table-head">
+            <tr>
+              <th>Date</th>
+              <th>Description</th>
+              <th>Category</th>
+              <th class="text-end">Amount</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for expense in expenses %}
+            <tr>
+              <td class="text-muted small">{{ expense.date|date:"d M Y" }}</td>
+              <td class="fw-semibold">{{ expense.description|truncatechars:35 }}</td>
+              <td>
+                <span class="category-badge category-{{ expense.category|lower }}">{{ expense.category }}</span>
+              </td>
+              <td class="text-end fw-bold text-danger">₹{{ expense.amount|floatformat:2 }}</td>
+              <td class="text-muted small">{{ expense.notes|default:"—"|truncatechars:30 }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

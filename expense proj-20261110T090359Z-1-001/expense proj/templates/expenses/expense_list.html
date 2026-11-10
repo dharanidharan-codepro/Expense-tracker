@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+{% block title %}My Expenses — Smart Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+
+  <!-- ── Page Header ── -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4 animate-fade-in">
+    <div>
+      <h1 class="page-title mb-1">
+        <i class="bi bi-receipt me-2 text-primary"></i>My Expenses
+      </h1>
+      <p class="text-muted mb-0">{{ expense_count }} record{{ expense_count|pluralize }} · Total: <strong class="text-danger">₹{{ total_amount|floatformat:2 }}</strong></p>
+    </div>
+    <a href="{% url 'add_expense' %}" class="btn btn-primary px-4 add-expense-hero-btn">
+      <i class="bi bi-plus-circle me-2"></i>Add New Expense
+    </a>
+  </div>
+
+  <!-- ── Date Filters ── -->
+  <div class="dashboard-card mb-4 animate-fade-in animate-delay-1">
+    <div class="dashboard-card-body py-3">
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        <span class="text-muted fw-semibold me-2">
+          <i class="bi bi-funnel me-1 text-primary"></i>Filter:
+        </span>
+        <a href="{% url 'expense_list' %}?filter=today"
+           class="btn btn-sm {% if filter_param == 'today' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+          <i class="bi bi-sun me-1"></i>Today
+        </a>
+        <a href="{% url 'expense_list' %}?filter=this_week"
+           class="btn btn-sm {% if filter_param == 'this_week' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+          <i class="bi bi-calendar-week me-1"></i>This Week
+        </a>
+        <a href="{% url 'expense_list' %}?filter=this_month"
+           class="btn btn-sm {% if filter_param == 'this_month' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+          <i class="bi bi-calendar-month me-1"></i>This Month
+        </a>
+        <a href="{% url 'expense_list' %}?filter=all"
+           class="btn btn-sm {% if filter_param == 'all' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+          <i class="bi bi-grid me-1"></i>All Time
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Expense Table ── -->
+  <div class="dashboard-card animate-fade-in animate-delay-2">
+    <div class="dashboard-card-body p-0">
+      {% if expenses %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0" id="expenseTable">
+            <thead class="table-head">
+              <tr>
+                <th style="width:110px">Date</th>
+                <th>Description</th>
+                <th style="width:130px">Category</th>
+                <th class="text-end" style="width:130px">Amount</th>
+                <th>Notes</th>
+                <th class="text-center" style="width:130px">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for expense in expenses %}
+              <tr class="expense-row" data-expense-id="{{ expense.pk }}">
+                <td>
+                  <span class="fw-semibold text-muted small">{{ expense.date|date:"d M Y" }}</span>
+                </td>
+                <td>
+                  <div class="fw-semibold">{{ expense.description }}</div>
+                </td>
+                <td>
+                  <span class="category-badge category-{{ expense.category|lower }}">
+                    {% if expense.category == 'Food' %}<i class="bi bi-egg-fried me-1"></i>
+                    {% elif expense.category == 'Travel' %}<i class="bi bi-car-front me-1"></i>
+                    {% elif expense.category == 'Shopping' %}<i class="bi bi-bag me-1"></i>
+                    {% elif expense.category == 'Education' %}<i class="bi bi-book me-1"></i>
+                    {% elif expense.category == 'Entertainment' %}<i class="bi bi-film me-1"></i>
+                    {% elif expense.category == 'Bills' %}<i class="bi bi-receipt me-1"></i>
+                    {% elif expense.category == 'Health' %}<i class="bi bi-heart-pulse me-1"></i>
+                    {% else %}<i class="bi bi-tag me-1"></i>
+                    {% endif %}
+                    {{ expense.category }}
+                  </span>
+                </td>
+                <td class="text-end">
+                  <span class="amount-value">₹{{ expense.amount|floatformat:2 }}</span>
+                </td>
+                <td>
+                  <span class="text-muted small">{{ expense.notes|default:"—"|truncatechars:35 }}</span>
+                </td>
+                <td class="text-center">
+                  <div class="d-flex gap-1 justify-content-center">
+                    <a href="{% url 'edit_expense' expense.pk %}"
+                       class="btn btn-sm btn-outline-primary action-btn"
+                       title="Edit expense" id="edit-expense-{{ expense.pk }}">
+                      <i class="bi bi-pencil"></i>
+                    </a>
+                    <a href="{% url 'delete_expense' expense.pk %}"
+                       class="btn btn-sm btn-outline-danger action-btn"
+                       title="Delete expense" id="delete-expense-{{ expense.pk }}">
+                      <i class="bi bi-trash"></i>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            <!-- Total Row -->
+            <tfoot>
+              <tr class="table-total-row">
+                <td colspan="3" class="fw-bold text-end py-3">TOTAL</td>
+                <td class="text-end fw-bold text-danger fs-5 py-3">₹{{ total_amount|floatformat:2 }}</td>
+                <td colspan="2"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      {% else %}
+        <!-- Empty State -->
+        <div class="empty-state py-5">
+          <i class="bi bi-receipt-cutoff empty-icon"></i>
+          <h3 class="empty-title">
+            {% if filter_param == 'today' %}No expenses recorded today
+            {% elif filter_param == 'this_week' %}No expenses this week
+            {% elif filter_param == 'this_month' %}No expenses this month
+            {% else %}No expenses yet
+            {% endif %}
+          </h3>
+          <p class="text-muted">
+            {% if filter_param != 'all' %}
+              Try selecting a different time period, or
+            {% endif %}
+            add your first expense!
+          </p>
+          <div class="d-flex gap-2 justify-content-center mt-3">
+            <a href="{% url 'add_expense' %}" class="btn btn-primary">
+              <i class="bi bi-plus-circle me-2"></i>Add Expense
+            </a>
+            {% if filter_param != 'all' %}
+              <a href="{% url 'expense_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-grid me-2"></i>View All
+              </a>
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}
