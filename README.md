@@ -1,4 +1,4 @@
-💰 Smart Expense Tracker
+## **💰 Smart Expense Tracker**
 
 A full-stack web application built with **Django** that helps users monitor and understand their daily, weekly, and monthly expenses.
 
